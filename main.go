@@ -58,7 +58,8 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
     r := mux.NewRouter()  // Create a new router
     r.HandleFunc("/signup", signupHandler).Methods("POST") // Signup route (POST request)
-   
+    
+
     // Handling CORS to allow requests from the React frontend
     headers := handlers.AllowedHeaders([]string{"Content-Type"}) // Allow 'Content-Type' header
     methods := handlers.AllowedMethods([]string{"POST", "GET", "OPTIONS"}) // Allow POST, GET, and OPTIONS methods
