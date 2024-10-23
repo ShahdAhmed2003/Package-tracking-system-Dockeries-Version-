@@ -7,15 +7,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/handlers" // Package to handle CORS (added this)
+	"github.com/gorilla/handlers" // Package to handle CORS
 	"github.com/gorilla/mux"      // Package for routing HTTP requests
 	_ "github.com/lib/pq"         // PostgreSQL driver
 )
 
 const (
     DB_USER     = "postgres"
-    DB_PASSWORD = "asdqwe123"
-    DB_NAME     = "myapp"
+    DB_PASSWORD = "Menna@123#" //****this password is to be changed on each one of us
+    DB_NAME     = "bosta"
 )
 
 var db *sql.DB
@@ -26,42 +26,68 @@ type User struct {
     Password string `json:"password"`
 }
 
-func init(){ //called when program starts
+func init(){
     var err error
 	
-    // Connect to the database using the connection string
     connStr := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
     db, err = sql.Open("postgres", connStr)
     if err != nil {
-        log.Fatal(err) // If there's an error, log it and stop the program
+        log.Fatal(err) //to log the error and stop the program
     }
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
     var user User
     if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest) // 400: Bad Request
+        http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
-    // Insert the new user into the 'users' table
     _, err := db.Exec("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", user.Name, user.Email, user.Password)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError) // 500: Server Error
+        http.Error(w, err.Error(), http.StatusInternalServerError) // 500
         return
     }
 
-    w.WriteHeader(http.StatusCreated) // 201: Created
+    w.WriteHeader(http.StatusCreated)//201
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+    var req map[string]string
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    
+    email:=req["email"]
+    password:=req["password"]
+    var userPass string
+    err := db.QueryRow("select password from users where email=$1", email).Scan(&userPass)
+    if err != nil {
+        if err==sql.ErrNoRows{
+            http.Error(w, "invalid email/password", http.StatusUnauthorized)
+        } else{
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
+        return
+    }
+
+    if userPass!=password{
+        http.Error(w, "invalid password", http.StatusUnauthorized)
+        return
+    }
+    w.WriteHeader(http.StatusOK)
+    w.Write(([]byte("logged in successfully!")))
 }
 
 
-
 func main() {
-    r := mux.NewRouter()  // Create a new router
-    r.HandleFunc("/signup", signupHandler).Methods("POST") // Signup route (POST request)
+    r := mux.NewRouter()  //creates a new router
+    r.HandleFunc("/signup", signupHandler).Methods("POST")
+    r.HandleFunc("/login", loginHandler).Methods("POST")
     
 
-    // Handling CORS to allow requests from the React frontend
+    //CORS to allow requests from the frontend
     headers := handlers.AllowedHeaders([]string{"Content-Type"}) // Allow 'Content-Type' header
     methods := handlers.AllowedMethods([]string{"POST", "GET", "OPTIONS"}) // Allow POST, GET, and OPTIONS methods
     origins := handlers.AllowedOrigins([]string{"http://localhost:3000"})  // Allow requests from this origin (React app running at localhost:3000)
