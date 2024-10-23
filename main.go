@@ -1,14 +1,15 @@
 package main
-import (
-    "database/sql"
-    "encoding/json"
-    "fmt"
-    "log"
-    "net/http"
 
-    "github.com/gorilla/mux"        // Package for routing HTTP requests
-    "github.com/gorilla/handlers"   // Package to handle CORS (added this)
-    _ "github.com/lib/pq"           // PostgreSQL driver
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/handlers" // Package to handle CORS (added this)
+	"github.com/gorilla/mux"      // Package for routing HTTP requests
+	_ "github.com/lib/pq"         // PostgreSQL driver
 )
 
 const (
