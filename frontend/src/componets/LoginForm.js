@@ -13,11 +13,42 @@ const RegistrationForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    setFormData({ email: "", password: "" });
-  };
+    const userPayload = {
+        name: formData.name,
+        email: formData.email,
+        phonenumber: formData.phone,
+        password: formData.password
+    };
+    try {
+        const response = await fetch('http://localhost:8080/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userPayload), 
+                                           
+                                             
+        });
+
+        if (response.ok) {
+            // Only attempt to parse JSON if the response is successful
+            alert("login successful!");
+            // Log the response data
+        } else {
+            const errorData = await response.text(); // Read the response as text
+            alert("Incorrect Email or Password. Please verify and try again");
+
+        }
+    } catch (error) {
+        console.error("Error submitting the form:", error);
+        alert("Something went wrong. Please try again.");
+    }
+    // Clear form after submission
+    setFormData({ name: '', email: '', phone: '', password: '' });
+};
+
 
   return (
     <div className="form-container">
