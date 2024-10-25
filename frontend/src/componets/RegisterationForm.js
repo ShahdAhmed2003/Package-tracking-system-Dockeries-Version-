@@ -15,11 +15,43 @@ const RegistrationForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    setFormData({ name: "", email: "", phone: "", password: "" });
-  };
+    const userPayload = {
+        name: formData.name,
+        email: formData.email,
+        phonenumber: formData.phone,
+        password: formData.password
+    };
+    try {
+        const response = await fetch('http://localhost:8080/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userPayload), 
+                                           
+                                             
+        });
+
+        if (response.ok) {
+          
+            alert("Signup successful!");
+          
+        } else {
+            const errorData = await response.text(); // Read the response as text
+            throw new Error(`Error: ${errorData}`);
+
+        }
+    } catch (error) {
+        console.error("Error submitting the form:", error);
+        alert("Email already Exists");
+    }
+    // Clear form after submission
+    setFormData({ name: '', email: '', phone: '', password: '' });
+};
+
+
 
   return (
     <div className="form-container">
