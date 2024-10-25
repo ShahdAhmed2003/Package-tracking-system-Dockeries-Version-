@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/handlers" // Package to handle CORS (added this)
 	"github.com/gorilla/mux"      // Package for routing HTTP requests
@@ -14,8 +15,8 @@ import (
 
 const (
     DB_USER     = "postgres"
-    DB_PASSWORD = "asdqwe123"
-    DB_NAME     = "myapp"
+    DB_PASSWORD = "Menna@123#"
+    DB_NAME     = "bosta"
 )
 
 var db *sql.DB
@@ -39,6 +40,18 @@ func init(){ //called when program starts
     }
 }
 
+//helper function to validate email structure
+func validateEmail(email string)bool{
+    re:=regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+    return re.MatchString(email)
+}
+
+//helper function to validate email structure
+func validatePhoneNumber(phonenumber string)bool{
+    re:=regexp.MustCompile(`^[0-9]{10,15}$`)
+    return re.MatchString(phonenumber)
+}
+
 func signupHandler(w http.ResponseWriter, r *http.Request) {
     var user User
     if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -47,8 +60,8 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Validate that required fields are present
-    if user.Email == "" {
-        http.Error(w, "Email is required", http.StatusBadRequest) // 400: Bad Request
+    if user.Email == ""||!validateEmail(user.Email) {
+        http.Error(w, "A valid email is required", http.StatusBadRequest) // 400: Bad Request
         return
     }
     if user.Name == "" {
@@ -59,12 +72,11 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Password is required", http.StatusBadRequest) // 400: Bad Request
         return
     }
-    if user.PhoneNumber == "" {
-        http.Error(w, "Phone number is required", http.StatusBadRequest) // 400: Bad Request
+    if user.PhoneNumber == ""||!validatePhoneNumber(user.PhoneNumber) {
+        http.Error(w, "A valid phone number is required(10-15) digits", http.StatusBadRequest) // 400: Bad Request
         return
     }
 
-    // Insert the new user into the 'users' table
     _, err := db.Exec("INSERT INTO users(name, email, password, phonenumber) VALUES($1, $2, $3, $4)", user.Name, user.Email, user.Password, user.PhoneNumber)
     if err != nil {
         http.Error(w, err.Error(), http.StatusConflict) // 409: Conflict
@@ -83,6 +95,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
     email:=req["email"]
     password:=req["password"]
+    if email==""{
+        http.Error(w, "Email is required", http.StatusBadRequest)
+        return
+    }
+    if password==""{
+        http.Error(w, "Password is required", http.StatusBadRequest)
+        return
+    }
     var userPass string
     err := db.QueryRow("select password from users where email=$1", email).Scan(&userPass)
     if err != nil {
@@ -109,8 +129,8 @@ func main() {
     r.HandleFunc("/login", loginHandler).Methods("POST")
 
     // Handling CORS to allow requests from the React frontend
-    headers := handlers.AllowedHeaders([]string{"Content-Type"}) // Allow 'Content-Type' header
-    methods := handlers.AllowedMethods([]string{"POST", "GET", "OPTIONS"}) // Allow POST, GET, and OPTIONS methods
+    headers := handlers.AllowedHeaders([]string{"Content-Type"})
+    methods := handlers.AllowedMethods([]string{"POST", "GET", "OPTIONS"})
     origins := handlers.AllowedOrigins([]string{"http://localhost:3000"})  // Allow requests from this origin (React app running at localhost:3000)
 
     // Run the HTTP server on port 8080 with CORS enabled for the router 'r'
