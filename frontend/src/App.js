@@ -1,12 +1,16 @@
 import React from 'react';
-import RegistrationForm from 'frontend/src/componets/RegisterationForm.js';
+import RegistrationForm from './componets/RegisterationForm';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Login from './componets/LoginForm';
 
 function App() {
     return (
-        <div className="App">
-            <h1>User Registration</h1>
-            <RegistrationForm />
-        </div>
+        <BrowserRouter>
+         <Routes>
+            <Route path="/" element={<RegistrationForm />} />
+            <Route path="/login" element={<Login />} />
+        </Routes>
+        </BrowserRouter>
     );
 }
 
