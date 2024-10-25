@@ -46,10 +46,28 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Validate that required fields are present
+    if user.Email == "" {
+        http.Error(w, "Email is required", http.StatusBadRequest) // 400: Bad Request
+        return
+    }
+    if user.Name == "" {
+        http.Error(w, "Name is required", http.StatusBadRequest) // 400: Bad Request
+        return
+    }
+    if user.Password == "" {
+        http.Error(w, "Password is required", http.StatusBadRequest) // 400: Bad Request
+        return
+    }
+    if user.PhoneNumber == "" {
+        http.Error(w, "Phone number is required", http.StatusBadRequest) // 400: Bad Request
+        return
+    }
+
     // Insert the new user into the 'users' table
-    _, err := db.Exec("INSERT INTO users(name, email, password,phonenumber) VALUES($1, $2, $3, $4)", user.Name, user.Email, user.Password,user.PhoneNumber)
+    _, err := db.Exec("INSERT INTO users(name, email, password, phonenumber) VALUES($1, $2, $3, $4)", user.Name, user.Email, user.Password, user.PhoneNumber)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError) // 500: Server Error
+        http.Error(w, err.Error(), http.StatusConflict) // 409: Conflict
         return
     }
 
