@@ -1,21 +1,16 @@
 package routes
 
 import (
-	"database/sql"
-	"net/http"
+	"bosta-backend/internal/middlewares"
 
-	gorillahandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
-func SetupRouter(db *sql.DB) http.Handler {
+func SetupRouter(db *gorm.DB) *mux.Router {
     r := mux.NewRouter()
 
+	r.Use(middlewares.CORSMiddleware)
     UserRoutes(r, db)
-
-    headers := gorillahandlers.AllowedHeaders([]string{"Content-Type"})
-    methods := gorillahandlers.AllowedMethods([]string{"POST", "GET", "OPTIONS"})
-    origins := gorillahandlers.AllowedOrigins([]string{"http://localhost:3000"})
-
-    return gorillahandlers.CORS(origins, headers, methods)(r)
+    return r
 }

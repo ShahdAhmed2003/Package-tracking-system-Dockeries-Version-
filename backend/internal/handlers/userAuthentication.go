@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"bosta-backend/internal/models"
-	"database/sql"
 	"encoding/json"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgconn"
+	"gorm.io/gorm"
 )
-func SignupHandler(db *sql.DB)http.HandlerFunc {
+func SignupHandler(db *gorm.DB)http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		var user models.User
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -21,7 +23,11 @@ func SignupHandler(db *sql.DB)http.HandlerFunc {
 		}
 
 		if err:=models.AddUser(db, user); err!= nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError) // 409: Conflict
+			if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {//unique violation code
+                http.Error(w, "Email already exists, no duplicate emails allowed", http.StatusConflict) // 409: Conflict
+                return
+            }
+			http.Error(w, err.Error(), http.StatusInternalServerError) //500
 			return
 		}
 
@@ -30,7 +36,7 @@ func SignupHandler(db *sql.DB)http.HandlerFunc {
     
 }
 
-func LoginHandler(db *sql.DB)http.HandlerFunc {
+func LoginHandler(db *gorm.DB)http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		var req map[string]string
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -49,12 +55,12 @@ func LoginHandler(db *sql.DB)http.HandlerFunc {
 			return
 		}
 		var userPass string
-		err := db.QueryRow("select password from users where email=$1", email).Scan(&userPass)
-		if err != nil {
-			if err==sql.ErrNoRows{
+		res := db.Table("users").Select("password").Where("email=?", email).Scan(&userPass)
+		if res.Error != nil {
+			if res.Error==gorm.ErrRecordNotFound{
 				http.Error(w, "invalid email or password, please try again", http.StatusUnauthorized)
 			} else{
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, res.Error.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
