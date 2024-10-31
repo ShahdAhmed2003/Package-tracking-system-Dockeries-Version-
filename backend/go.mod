@@ -1,4 +1,4 @@
-module myapp-backend
+module bosta-backend
 
 go 1.23.2
 
