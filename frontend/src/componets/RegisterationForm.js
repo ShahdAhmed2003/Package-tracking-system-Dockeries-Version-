@@ -45,7 +45,14 @@ const RegistrationForm = () => {
         }
     } catch (error) {
         console.error("Error submitting the form:", error);
-        alert("Email already Exists");
+       if (error.message.includes("duplicate"))
+       {
+        alert("Email already exixts");
+       }
+       else
+       {
+        alert(error.message);
+       }
     }
     // Clear form after submission
     setFormData({ name: '', email: '', phone: '', password: '' });
