@@ -12,5 +12,6 @@ func SetupRouter(db *gorm.DB) *mux.Router {
 
 	r.Use(middlewares.CORSMiddleware)
     UserRoutes(r, db)
+    OrderRoutes(r, db)
     return r
 }

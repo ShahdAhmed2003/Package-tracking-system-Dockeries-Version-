@@ -12,10 +12,13 @@ func SignupHandler(db *gorm.DB)http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		var user models.User
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest) //400: Bad Request
+			http.Error(w, err.Error(), http.StatusBadRequest) //400
 			return
 		}
 
+		if user.Role == "" {
+			user.Role = "customer"
+		}
 		////
 		if err:=ValidateUserData(user.Email, user.Name, user.Password, user.PhoneNumber); err!=nil{
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -24,7 +27,7 @@ func SignupHandler(db *gorm.DB)http.HandlerFunc {
 
 		if err:=models.AddUser(db, user); err!= nil {
 			if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {//unique violation code
-                http.Error(w, "Email already exists, no duplicate emails allowed", http.StatusConflict) // 409: Conflict
+                http.Error(w, "Email already exists, no duplicate emails allowed", http.StatusConflict) //409
                 return
             }
 			http.Error(w, err.Error(), http.StatusInternalServerError) //500
@@ -54,8 +57,9 @@ func LoginHandler(db *gorm.DB)http.HandlerFunc {
 			http.Error(w, "Password is required", http.StatusBadRequest)
 			return
 		}
-		var userPass string
-		res := db.Table("users").Select("password").Where("email=?", email).Scan(&userPass)
+		var user models.User
+		res:=db.Where("email=?", email).First((&user))
+
 		if res.Error != nil {
 			if res.Error==gorm.ErrRecordNotFound{
 				http.Error(w, "invalid email or password, please try again", http.StatusUnauthorized)
@@ -65,11 +69,19 @@ func LoginHandler(db *gorm.DB)http.HandlerFunc {
 			return
 		}
 
-		if userPass!=password{
+		if user.Password!=password{
 			http.Error(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
+		user.IsLoggedIn=true
+		if err := db.Save(&user).Error; err != nil {
+			http.Error(w, "failed to update login status", http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
-		w.Write(([]byte("logged in successfully!")))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
+		// w.Write(([]byte("logged in successfully!")))
 	}
 }

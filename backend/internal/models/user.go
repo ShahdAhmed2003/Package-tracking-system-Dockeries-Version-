@@ -11,6 +11,9 @@ type User struct {
     Email    string `json:"email" gorm:"unique"`
     Password string `json:"password"`
     PhoneNumber string `json:"phonenumber"`
+    Role string `json:"role"`
+    IsLoggedIn bool `json:"is_logged_in" gorm:"default:false"`
+    Orders []Order `json:"orders"`
 	
 }
 

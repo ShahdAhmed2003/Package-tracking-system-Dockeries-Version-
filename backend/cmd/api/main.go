@@ -20,10 +20,27 @@ func main() {
 	}()
 
 	//for auto migration
-	err=db.AutoMigrate(&models.User{})
-	if err!=nil{
-		log.Fatalf("failed to migrate the database %v", err)
+	err = db.AutoMigrate(&models.User{})
+
+	if err != nil {
+		log.Fatalf("failed to migrate some tables: %v", err)
 	}
+
+	err = db.AutoMigrate(&models.Order{})
+	if err != nil {
+		log.Fatalf("failed to migrate Order: %v", err)
+	}
+
+	err = db.AutoMigrate(&models.Address{})
+	if err != nil {
+		log.Fatalf("failed to migrate Address: %v", err)
+	}
+
+	err = db.AutoMigrate(&models.Package{})
+	if err != nil {
+		log.Fatalf("failed to migrate Package: %v", err)
+	}
+
 
 	  //initializing router with routes
     r := routes.SetupRouter(db)
