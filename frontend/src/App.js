@@ -3,6 +3,7 @@ import RegistrationForm from './componets/RegisterationForm';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Login from './componets/LoginForm';
 import OrderForm from './componets/OrderForm';
+import MyOrders from './componets/MyOrders';
 
 function App() {
     return (
@@ -11,7 +12,9 @@ function App() {
             <Route path="/" element={<RegistrationForm />} />
             <Route path="/login" element={<Login />} />
              <Route path="/order" element={<OrderForm />} />
-        </Routes>
+             <Route path="/myOrders" element={<MyOrders />} />
+
+         </Routes>
         </BrowserRouter>
     );
 }
