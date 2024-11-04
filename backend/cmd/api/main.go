@@ -6,7 +6,6 @@ import (
 	"bosta-backend/internal/middlewares"
 	"bosta-backend/internal/models"
 	"bosta-backend/internal/routes"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -26,10 +25,7 @@ func main() {
         log.Fatalf("Migration failed: %v", err)
     }
 
-    r := routes.SetupRouter(db)
-    // Ensure middleware is applied correctly
-    r.Use(middlewares.CORSMiddleware)
-
-    fmt.Println("Starting server on :8080")
-    log.Fatal(http.ListenAndServe(":8080", r))
+    mux := routes.SetupRouter(db)
+    handler := middlewares.CORSMiddleware(mux)
+    log.Fatal(http.ListenAndServe(":8080", handler))
 }

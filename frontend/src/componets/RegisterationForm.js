@@ -28,6 +28,7 @@ const RegistrationForm = () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(userPayload), 
                                            
@@ -35,7 +36,7 @@ const RegistrationForm = () => {
         });
 
         if (response.ok) {
-          
+            setFormData({ name: '', email: '', phone: '', password: '' });
             alert("Signup successful!");
           
         } else {
@@ -55,7 +56,6 @@ const RegistrationForm = () => {
        }
     }
     // Clear form after submission
-    setFormData({ name: '', email: '', phone: '', password: '' });
 };
 
 
