@@ -1,48 +1,35 @@
+// main.go
 package main
 
 import (
 	"bosta-backend/internal/database"
+	"bosta-backend/internal/middlewares"
 	"bosta-backend/internal/models"
 	"bosta-backend/internal/routes"
+	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
-	  //initializing db connection
     db, err := database.ConnectDB()
     if err != nil {
         log.Fatalf("Database connection failed: %v", err)
     }
-    defer func(){
-		sqlDB, _:=db.DB() //to get *sql.DB
-		sqlDB.Close()
-	}()
+    defer func() {
+        sqlDB, _ := db.DB()
+        sqlDB.Close()
+    }()
 
-	//for auto migration
-	err = db.AutoMigrate(&models.User{})
+    err = db.AutoMigrate(&models.User{}, &models.Order{}, &models.Address{}, &models.Package{})
+    if err != nil {
+        log.Fatalf("Migration failed: %v", err)
+    }
 
-	if err != nil {
-		log.Fatalf("failed to migrate some tables: %v", err)
-	}
-
-	err = db.AutoMigrate(&models.Order{})
-	if err != nil {
-		log.Fatalf("failed to migrate Order: %v", err)
-	}
-
-	err = db.AutoMigrate(&models.Address{})
-	if err != nil {
-		log.Fatalf("failed to migrate Address: %v", err)
-	}
-
-	err = db.AutoMigrate(&models.Package{})
-	if err != nil {
-		log.Fatalf("failed to migrate Package: %v", err)
-	}
-
-
-	  //initializing router with routes
     r := routes.SetupRouter(db)
+    // Ensure middleware is applied correctly
+    r.Use(middlewares.CORSMiddleware)
+
+    fmt.Println("Starting server on :8080")
     log.Fatal(http.ListenAndServe(":8080", r))
 }
