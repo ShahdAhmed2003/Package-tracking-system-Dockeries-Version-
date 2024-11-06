@@ -82,18 +82,18 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "failed to update login status", http.StatusInternalServerError)
 			return
 		}
-		token, err := createToken(user) // Call to your JWT creation function
+		token, err := createToken(user)
 		if err != nil {
 			http.Error(w, "could not create token", http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Token generated for user %s", user.Email) // Avoid logging full token in production
+		log.Printf("Token generated for user %s", user.Email)
 
-		// Return only the token and basic user information
 		response := map[string]interface{}{
 			"token": token,
 			"user": map[string]interface{}{
+				"user_id":user.ID,
 				"name":  user.Name,
 				"email": user.Email,
 				"role":  user.Role,
