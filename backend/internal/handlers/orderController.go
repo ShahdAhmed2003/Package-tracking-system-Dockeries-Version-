@@ -13,39 +13,65 @@ import (
 )
 
 //GET /api/orders/addOrder
-func CreateOrder(db *gorm.DB)http.HandlerFunc {
+func CreateOrder(db *gorm.DB) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		var order models.Order
-		if err:=json.NewDecoder(req.Body).Decode(&order); err!=nil{
-			http.Error(res, "invalid request, please try again later", http.StatusBadRequest)
+
+		// Decode the incoming JSON
+		if err := json.NewDecoder(req.Body).Decode(&order); err != nil {
+			http.Error(res, "Invalid JSON format", http.StatusBadRequest)
+			log.Printf("Error decoding JSON: %v", err)
 			return
 		}
-		order.Status="Pending"
+
+		// Validate required fields
+		if order.UserId == "" {
+			http.Error(res, "User ID is required", http.StatusBadRequest)
+			return
+		}
+		if order.PickUpLocation.City == "" {
+			http.Error(res, "Pick-up city is required", http.StatusBadRequest)
+			return
+		}
+		if order.DropOffLocation.City == "" {
+			http.Error(res, "Drop-off city is required", http.StatusBadRequest)
+			return
+		}
+
+		// Check if the user exists and is logged in
 		var user models.User
-		if err:=db.Where("id=? and is_logged_in=true", order.UserId).First(&user).Error; err!=nil{
-			if err==gorm.ErrRecordNotFound{
-				http.Error(res, "You must login!", http.StatusUnauthorized)
-			}else{
-				http.Error(res, "error in retrieving from db!", http.StatusNotFound)
+		if err := db.Where("id = ? AND is_logged_in = true", order.UserId).First(&user).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				http.Error(res, "You must log in!", http.StatusUnauthorized)
+			} else {
+				http.Error(res, "Error retrieving user from database", http.StatusInternalServerError)
+				log.Printf("Database query error: %v", err)
 			}
 			return
 		}
-		
-		if order.UserId == "" || order.PickUpLocation.City == "" || order.DropOffLocation.City == "" {
-			http.Error(res, "Missing required order fields", http.StatusBadRequest)
+
+		// Set the order status
+		order.Status = "Pending"
+
+		// Attempt to create the order in the database
+		if err := db.Create(&order).Error; err != nil {
+			http.Error(res, "Failed to create the order", http.StatusInternalServerError)
+			log.Printf("Database create error: %v", err)
 			return
 		}
 
-		if err:=db.Create(&order).Error; err!=nil{
-			http.Error(res, "failed to create the order", http.StatusInternalServerError)
-			return
-		}
+		// Log the received order for debugging
+		log.Printf("Order created successfully: %+v", order)
+
+		// Respond with the created order
 		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusCreated)
-		json.NewEncoder(res).Encode(order)
+		if err := json.NewEncoder(res).Encode(order); err != nil {
+			http.Error(res, "Failed to encode response", http.StatusInternalServerError)
+			log.Printf("Error encoding response: %v", err)
+		}
 	}
 }
-
 //GET /api/orders/verify?orderId=123
 func VerifyOrder(db *gorm.DB)http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
