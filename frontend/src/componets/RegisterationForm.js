@@ -16,6 +16,7 @@ const RegistrationForm = () => {
         setFormData({ ...formData, [name]: value });
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const userPayload = {
@@ -34,6 +35,41 @@ const RegistrationForm = () => {
                 },
                 body: JSON.stringify(userPayload),
             });
+=======
+    try {
+        const response = await fetch('http://localhost:8080/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(userPayload), 
+                                           
+                                             
+        });
+
+        if (response.ok) {
+            setFormData({ name: '', email: '', phone: '', password: '' });
+            alert("Signup successful!");
+          
+        } else {
+            const errorData = await response.text(); // Read the response as text
+            throw new Error(`Error: ${errorData}`);
+
+        }
+    } catch (error) {
+        console.error("Error submitting the form:", error);
+       if (error.message.includes("duplicate"))
+       {
+        alert("Email already exixts");
+       }
+       else
+       {
+        alert(error.message);
+       }
+    }
+    // Clear form after submission
+};
 
             if (response.ok) {
                 alert("Signup successful!");
