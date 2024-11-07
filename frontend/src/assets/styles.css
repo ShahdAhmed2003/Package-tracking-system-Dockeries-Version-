@@ -1,61 +1,365 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
 }
 
 .App {
-    max-width: 400px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 form div {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 label {
-    display: block;
-    margin-bottom: 5px;
+  display: block;
+  margin-bottom: 5px;
 }
 
 input {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    width: 100%;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
 }
 
 button:hover {
-    background-color: #45a049;
+  background-color: #45a049;
 }
 
 .form-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; 
-    width: 400;
+  margin-top: 3%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 400;
 }
 
 form {
-    max-width: 500px; 
-    width: 100%; 
-    padding: 30px; 
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
+  max-width: 500px;
+  width: 100%;
+  padding: 30px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+/* order details */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f4f7fa;
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h3 {
+  color: #333;
+}
+
+.order-details-container {
+  max-width: 900px;
+  margin: 30px auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.order-details-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.order-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-section {
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.order-section h3 {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.order-section p {
+  font-size: 1em;
+  color: #777;
+}
+
+.order-actions {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.cancel-order-btn {
+  background-color: #e74c3c;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-order-btn:hover {
+  background-color: #c0392b;
+}
+
+.loading,
+.error {
+  text-align: center;
+  font-size: 1.5em;
+  color: #e74c3c;
+  margin-top: 30px;
+}
+
+/* order form page */
+.order-form-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 30px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  border-radius: 10px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-form-container h1 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+form section {
+  margin-bottom: 20px;
+}
+
+form section h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+label {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a73e8;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 600px) {
+  .order-form-container {
+    padding: 20px;
+  }
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    font-size: 12px;
+  }
+}
+
+/* header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header nav a {
+  text-decoration: none;
+  color: #333;
+}
+
+.login-button {
+  background-color: #ff5722;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  padding: 40px;
+  background-color: #f5f5f5;
+}
+
+.hero-content {
+  flex: 1;
+}
+
+.hero-content h1 {
+  font-size: 2.5em;
+  color: #333;
+}
+
+.cta-button {
+  background-color: #ff5722;
+  color: #fff;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+.hero-image img {
+  max-width: 100%;
+}
+
+/* orders page */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.orders-page {
+  background-color: #f5f5f5;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2.5em;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.loading,
+.error {
+  text-align: center;
+  font-size: 1.5em;
+  color: #ff5722;
+}
+
+.orders-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.order-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.order-card:hover {
+  transform: translateY(-5px);
+}
+
+.order-card h2 {
+  color: #333;
+  font-size: 1.4em;
+  margin-bottom: 10px;
+}
+
+.order-card p {
+  font-size: 1em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.order-card p strong {
+  color: #333;
+}
+
+.details-link {
+  align-self: flex-start;
+  text-decoration: none;
+  color: #ff5722;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.details-link:hover {
+  text-decoration: underline;
 }

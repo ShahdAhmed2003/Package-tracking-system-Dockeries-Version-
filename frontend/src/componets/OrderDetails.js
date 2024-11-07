@@ -1,27 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import "../assets/styles.css";
-import { Link } from "react-router-dom";
 
 const OrderDetails = () => {
-    const { orderId } = useParams(); //3yza ageeb el order id mn el url
+    const { orderId } = useParams();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userID = user.user_id.toString();
+
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/order/${orderId}`);
+                const response = await fetch(`http://localhost:8080/api/orders/details/${orderId}?userId=${userID}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch order details');
                 }
                 const data = await response.json();
                 setOrder(data);
-            } catch (err) {
+            }
+            catch (err) {
                 setError(err.message);
-            } finally {
+            }
+            finally {
                 setLoading(false);
             }
         };
@@ -49,32 +53,59 @@ const OrderDetails = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div className="loading">Loading...</div>;
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div className="error">Error: {error}</div>;
     }
 
     return (
         <div className="order-details-container">
-            <h1>Order Details</h1>
-            <h2>Order ID: {order.id}</h2>
-            <p>Status: {order.status}</p>
-            <p>Pick-up Location: {order.pickupLocation}</p>
-            <p>Drop-off Location: {order.dropoffLocation}</p>
-            <p>Delivery Time: {order.deliveryTime}</p>
-            <p>Package Details: {order.packageDetails}</p>
-            {order.courier && (
-                <div>
-                    <h3>Courier Information</h3>
-                    <p>Name: {order.courier.name}</p>
-                    <p>Contact: {order.courier.contact}</p>
+            <div className="order-details-header">
+                <h1>Order Details</h1>
+            </div>
+            <div className="order-info">
+                <div className="order-section">
+                    <h3>Status:</h3>
+                    <p>{order.status}</p>
                 </div>
-            )}
-            {order.status === 'Pending' && (
-                <button onClick={handleCancelOrder}>Cancel Order</button>
-            )}
+                <div className="order-section">
+                    <h3>Pick-up Location:</h3>
+                    <p>{order.pickup_location.street_address}, {order.pickup_location.city}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Drop-off Location:</h3>
+                    <p>{order.drop_off_location.street_address}, {order.drop_off_location.city}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Package Contents:</h3>
+                    <p>{order.package_details.contents}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Tracking Number:</h3>
+                    <p>{order.tracking_number}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Estimated Delivery:</h3>
+                    <p>{order.estimated_delivery}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Recipient Name:</h3>
+                    <p>{order.recipient?.name}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Recipient Contact:</h3>
+                    <p>{order.recipient?.contact}</p>
+                </div>
+                <div className="order-section">
+                    <h3>Additional Instructions:</h3>
+                    <p>{order.package_details.special_requirements}</p>
+                </div>
+            </div>
+            <div className="order-actions">
+                <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
+            </div>
         </div>
     );
 };
