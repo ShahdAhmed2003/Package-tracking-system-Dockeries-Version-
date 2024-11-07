@@ -3,7 +3,6 @@ package handlers
 import (
 	"bosta-backend/internal/models"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -52,21 +51,16 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 
 		email := req["email"]
 		password := req["password"]
-		if email == "" {
-			http.Error(w, "Email is required", http.StatusBadRequest)
-			return
-		}
-		if password == "" {
-			http.Error(w, "Password is required", http.StatusBadRequest)
+		if email == "" || password == "" {
+			http.Error(w, "Email and password are required", http.StatusBadRequest)
 			return
 		}
 
 		var user models.User
-		res := db.Where("email=?", email).First(&user)
-
+		res := db.Where("email = ?", email).First(&user)
 		if res.Error != nil {
 			if res.Error == gorm.ErrRecordNotFound {
-				http.Error(w, "invalid email or password", http.StatusUnauthorized)
+				http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			} else {
 				http.Error(w, res.Error.Error(), http.StatusInternalServerError)
 			}
@@ -74,31 +68,25 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		if user.Password != password {
-			http.Error(w, "invalid password", http.StatusUnauthorized)
-			return
-		}
-        user.IsLoggedIn=true
-		if err := db.Save(&user).Error; err != nil {
-			http.Error(w, "failed to update login status", http.StatusInternalServerError)
-			return
-		}
-		token, err := createToken(user)
-		if err != nil {
-			http.Error(w, "could not create token", http.StatusInternalServerError)
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
-		log.Printf("Token generated for user %s", user.Email)
+		user.IsLoggedIn = true
+		if err := db.Save(&user).Error; err != nil {
+			http.Error(w, "Failed to update login status", http.StatusInternalServerError)
+			return
+		}
+
+		token, err := createToken(user)
+		if err != nil {
+			http.Error(w, "Could not create token", http.StatusInternalServerError)
+			return
+		}
 
 		response := map[string]interface{}{
 			"token": token,
-			"user": map[string]interface{}{
-				"user_id":user.ID,
-				"name":  user.Name,
-				"email": user.Email,
-				"role":  user.Role,
-				"loggedin":user.IsLoggedIn,
-			},
+			
 		}
 
 		w.Header().Set("Authorization", "Bearer "+token)
@@ -106,4 +94,5 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(response)
 	}
 }
+
 

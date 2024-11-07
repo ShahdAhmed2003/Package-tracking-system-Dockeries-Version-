@@ -5,197 +5,190 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
-//GET /api/orders/addOrder
+func GenerateTrackingNumber() string {
+    rand.Seed(time.Now().UnixNano())
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    var trackingNumber strings.Builder
+    for i := 0; i < 15; i++ {
+        randomIndex := rand.Intn(len(charset))
+        trackingNumber.WriteByte(charset[randomIndex])
+    }
+    return trackingNumber.String()
+}
+func CalculateEstimatedTime()time.Time{
+	rand.Seed((time.Now().UnixNano()))
+	randomHours:=rand.Intn(5-1+1)+1
+	bufferTime := 0.5 // 30 minutes in hours
+	totalEstimatedTime := float64(randomHours) + bufferTime
+	now := time.Now()
+	estimatedDeliveryTime := now.Add(time.Hour * time.Duration(totalEstimatedTime))
+	return estimatedDeliveryTime
+}
+//POST /api/orders/addOrder
 func CreateOrder(db *gorm.DB) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
+    return func(res http.ResponseWriter, req *http.Request) {
+        userID, err:=VerifyToken((req))
+		if err!=nil{
+			http.Error(res, err.Error(), http.StatusUnauthorized)
+			return
+		}
 		var order models.Order
-
-		// Decode the incoming JSON
-		if err := json.NewDecoder(req.Body).Decode(&order); err != nil {
-			http.Error(res, "Invalid JSON format", http.StatusBadRequest)
-			log.Printf("Error decoding JSON: %v", err)
-			return
+        
+        if err := json.NewDecoder(req.Body).Decode(&order); err != nil {
+            http.Error(res, "Invalid JSON format", http.StatusBadRequest)
+            log.Printf("Error decoding JSON: %v", err)
+            return
+        }
+		order.UserId=userID
+		order.TrackingNumber=GenerateTrackingNumber()
+		estimatedDeliveryTime:=CalculateEstimatedTime()
+		order.EstimatedDeliveryTime=&estimatedDeliveryTime
+		if order.Status==""{
+			order.Status="Pending"
 		}
-
-		// Validate required fields
-		if order.UserId == "" {
-			http.Error(res, "User ID is required", http.StatusBadRequest)
-			return
-		}
-		if order.PickUpLocation.City == "" {
-			http.Error(res, "Pick-up city is required", http.StatusBadRequest)
-			return
-		}
-		if order.DropOffLocation.City == "" {
-			http.Error(res, "Drop-off city is required", http.StatusBadRequest)
-			return
-		}
-
-		// Check if the user exists and is logged in
-		var user models.User
-		if err := db.Where("id = ? AND is_logged_in = true", order.UserId).First(&user).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				http.Error(res, "You must log in!", http.StatusUnauthorized)
-			} else {
-				http.Error(res, "Error retrieving user from database", http.StatusInternalServerError)
-				log.Printf("Database query error: %v", err)
-			}
-			return
-		}
-
-		// Set the order status
-		order.Status = "Pending"
-
-		// Attempt to create the order in the database
 		if err := db.Create(&order).Error; err != nil {
-			http.Error(res, "Failed to create the order", http.StatusInternalServerError)
-			log.Printf("Database create error: %v", err)
-			return
-		}
-
-		// Log the received order for debugging
-		log.Printf("Order created successfully: %+v", order)
-
-		// Respond with the created order
-		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(res).Encode(order); err != nil {
-			http.Error(res, "Failed to encode response", http.StatusInternalServerError)
-			log.Printf("Error encoding response: %v", err)
-		}
-	}
+            http.Error(res, "Failed to create order", http.StatusInternalServerError)
+            return
+        }
+        log.Printf("Order created successfully: %+v", order)
+        
+        res.Header().Set("Content-Type", "application/json")
+        res.WriteHeader(http.StatusCreated)
+        if err := json.NewEncoder(res).Encode(order); err != nil {
+            http.Error(res, "Failed to encode response", http.StatusInternalServerError)
+            log.Printf("Error encoding response: %v", err)
+        }
+    }
 }
+
 //GET /api/orders/verify?orderId=123
-func VerifyOrder(db *gorm.DB)http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		orderID:=req.URL.Query().Get("orderId")
-		if orderID==""{
-			http.Error(res, "order id is required", http.StatusBadRequest)
-			return
-		}
-		var order models.Order
-		if err:=db.First(&order, orderID).Error; err!=nil{
-			if err==gorm.ErrRecordNotFound{
-				http.Error(res, "order is not found", http.StatusNotFound)
-			}else{
-				http.Error(res, "failure in db", http.StatusNotFound)
-			}
-			return
-		}
+func VerifyOrder(db *gorm.DB) http.HandlerFunc {
+    return func(res http.ResponseWriter, req *http.Request) {
+        _, err := VerifyToken(req)
+        if err != nil {
+            http.Error(res, err.Error(), http.StatusUnauthorized)
+            return
+        }
 
-		order.Status = "Verified"
-		if err := db.Save(&order).Error; err != nil {
-			http.Error(res, "failed to update order status", http.StatusInternalServerError)
-			return
-		}
+        orderID := req.URL.Query().Get("orderId")
+        if orderID == "" {
+            http.Error(res, "Order ID is required", http.StatusBadRequest)
+            return
+        }
 
-		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusOK)
-		json.NewEncoder(res).Encode(order)
-	}
+        var order models.Order
+        if err := db.First(&order, orderID).Error; err != nil {
+            http.Error(res, "Order not found", http.StatusNotFound)
+            return
+        }
+
+        order.Status = "Verified"
+        if err := db.Save(&order).Error; err != nil {
+            http.Error(res, "Failed to update order status", http.StatusInternalServerError)
+            return
+        }
+
+        res.Header().Set("Content-Type", "application/json")
+        res.WriteHeader(http.StatusOK)
+        json.NewEncoder(res).Encode(order)
+    }
 }
+
 
 //http://localhost:8080/api/users/orders?userId=1
 func GetUserOrders(db *gorm.DB) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		userID := req.URL.Query().Get("userId")
-		if userID == "" {
-			http.Error(res, "userId is required", http.StatusBadRequest)
-			return
-		}
-		var user models.User
-		if err:=db.Where("id=? and is_logged_in=true", userID).First(&user).Error; err!=nil{
-			if err==gorm.ErrRecordNotFound{
-				http.Error(res, "You must login!", http.StatusUnauthorized)
-			}else{
-				http.Error(res, "error in retrieving from db!", http.StatusNotFound)
-			}
-			return
-		}
+    return func(res http.ResponseWriter, req *http.Request) {
+        userID, err := VerifyToken(req)
+        if err != nil {
+            http.Error(res, err.Error(), http.StatusUnauthorized)
+            return
+        }
 
-		var orders []models.Order
-		if err := db.Where("user_id = ?", userID).Find(&orders).Error; err != nil {
-			http.Error(res, "failed to retrieve orders", http.StatusInternalServerError)
-			return
-		}
+        var orders []models.Order
+        if err := db.Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+            http.Error(res, "Failed to retrieve orders", http.StatusInternalServerError)
+            return
+        }
 
-		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusOK)
-		json.NewEncoder(res).Encode(orders)
-	}
+        res.Header().Set("Content-Type", "application/json")
+        res.WriteHeader(http.StatusOK)
+        json.NewEncoder(res).Encode(orders)
+    }
 }
+
 
 
 //http://localhost:8080/api/orders/details/1?userId=1
 func GetOrderDetails(db *gorm.DB) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		vars:=mux.Vars(req)
-		orderID := vars["orderID"]
-		userID := req.URL.Query().Get("userId")
-		if orderID == "" {
-			http.Error(res, "OrderID is required", http.StatusBadRequest)
-			return
-		}
-		if userID == "" {
-			http.Error(res, "userID is required", http.StatusBadRequest)
-			return
-		}
+    return func(res http.ResponseWriter, req *http.Request) {
+        userID, err := VerifyToken(req)
+        if err != nil {
+            http.Error(res, err.Error(), http.StatusUnauthorized)
+            return
+        }
 
-		var order models.Order
-		if err := db.Where("id=? and user_id=?", orderID, userID).First(&order).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				http.Error(res, "Order is not found", http.StatusNotFound)
-			}else{
-				http.Error(res, "Failed to retrieve order details", http.StatusInternalServerError)
-			}
-			return
-		}
+        vars := mux.Vars(req)
+        orderID := vars["orderID"]
+        if orderID == "" {
+            http.Error(res, "Order ID is required", http.StatusBadRequest)
+            return
+        }
 
-		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusOK)
-		json.NewEncoder(res).Encode(order)
-	}
+        var order models.Order
+        if err := db.Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
+            http.Error(res, "Order not found", http.StatusNotFound)
+            return
+        }
+
+        res.Header().Set("Content-Type", "application/json")
+        res.WriteHeader(http.StatusOK)
+        json.NewEncoder(res).Encode(order)
+    }
 }
-
 
 //
 func CancelOrder(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		//to get the order ID from the url
-		vars:=mux.Vars(req)
-		orderID := vars["orderID"]
-		var order models.Order
-		result := db.First(&order, orderID)
-		if result.Error != nil {
-			if result.Error == gorm.ErrRecordNotFound {
-				http.Error(w, "Order not found", http.StatusNotFound)
-			}else{
-				http.Error(w, result.Error.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-		if order.Status != "Pending" {
-			http.Error(w, "Order cannot be canceled, it is not pending", http.StatusConflict)
-			return
-		}
-		order.Status = "canceled"
-		if err := db.Save(&order).Error; err != nil {
-			http.Error(w, "Failed to cancel the order, try again later", http.StatusInternalServerError)
-			return
-		}
+    return func(w http.ResponseWriter, req *http.Request) {
+        userID, err := VerifyToken(req)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusUnauthorized)
+            return
+        }
 
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(order)
-	}
+        vars := mux.Vars(req)
+        orderID := vars["orderID"]
+        var order models.Order
+        if err := db.Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
+            http.Error(w, "Order not found", http.StatusNotFound)
+            return
+        }
+        if order.Status != "Pending" {
+            http.Error(w, "Order cannot be canceled, it is not pending", http.StatusConflict)
+            return
+        }
+
+        order.Status = "Canceled"
+        if err := db.Save(&order).Error; err != nil {
+            http.Error(w, "Failed to cancel the order", http.StatusInternalServerError)
+            return
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(order)
+    }
 }
+
 func GetAssignedOrders(db*gorm.DB) http.HandlerFunc{
 return func(w http.ResponseWriter, r *http.Request){
 	userClaims := r.Context().Value("user").(*models.Claims)

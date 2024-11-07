@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import "../assets/styles.css";
+import { decodeToken } from "../utils/auth";
 
 const OrderDetails = () => {
     const { orderId } = useParams();
@@ -9,34 +10,45 @@ const OrderDetails = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const userID = user.user_id.toString();
+    const token = localStorage.getItem("token");
+    let userID = null;
+    if (token) {
+        const decodedToken = decodeToken(token);
+        userID = decodedToken.userID;
+    }
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/orders/details/${orderId}?userId=${userID}`);
+                const response = await fetch(`http://localhost:8080/api/orders/details/${orderId}?userId=${userID}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch order details');
                 }
                 const data = await response.json();
                 setOrder(data);
-            }
-            catch (err) {
+            } catch (err) {
                 setError(err.message);
-            }
-            finally {
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchOrderDetails();
-    }, [orderId]);
+    }, [orderId, userID, token]);
 
     const handleCancelOrder = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/order/${orderId}/cancel`, {
-                method: 'POST',
+            const response = await fetch(`http://localhost:8080/api/orders/cancel/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (response.ok) {
@@ -48,6 +60,28 @@ const OrderDetails = () => {
             }
         } catch (error) {
             console.error("Error cancelling the order:", error);
+            alert("Something went wrong! Please try again.");
+        }
+    };
+
+    const handleVerifyOrder = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/orders/verify?orderId=${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                alert("Order verified successfully");
+                setOrder({ ...order, status: "Verified" });
+            } else {
+                const errorData = await response.text();
+                alert("Failed to verify order: " + errorData);
+            }
+        } catch (error) {
+            console.error("Error verifying the order:", error);
             alert("Something went wrong! Please try again.");
         }
     };
@@ -88,23 +122,29 @@ const OrderDetails = () => {
                 </div>
                 <div className="order-section">
                     <h3>Estimated Delivery:</h3>
-                    <p>{order.estimated_delivery}</p>
+                    <p>{order.estimated_delivery_time}</p>
                 </div>
+                
                 <div className="order-section">
-                    <h3>Recipient Name:</h3>
-                    <p>{order.recipient?.name}</p>
+                    <h3>Delivery Time:</h3>
+                    <p>{order.delivery_time}</p>
                 </div>
-                <div className="order-section">
-                    <h3>Recipient Contact:</h3>
-                    <p>{order.recipient?.contact}</p>
-                </div>
+                
                 <div className="order-section">
                     <h3>Additional Instructions:</h3>
-                    <p>{order.package_details.special_requirements}</p>
+                    <p>{order.package_details.special_requirements?order.package_details.special_requirements:"None"}</p>
                 </div>
             </div>
             <div className="order-actions">
-                <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
+                {order.status === "Pending" && (
+                    <button className="verify-order-btn" onClick={handleVerifyOrder}>Verify Order</button>
+                )}
+                {order.status === "Verified"?
+                    ""
+                    : 
+                    <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
+                
+                }
             </div>
         </div>
     );

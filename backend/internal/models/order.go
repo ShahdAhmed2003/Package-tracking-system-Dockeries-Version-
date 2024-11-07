@@ -15,6 +15,7 @@ type Order struct {
     PackageDetails Package `json:"package_details" gorm:"embedded;embeddedPrefix:package_"`
     AssignedCourierID    uint   `json:"courier_id"` // Foreign key for Courier
     Status string `json:"status"`
-    DeliveryTime *time.Time `json:"delivery_time"`
-	
+    DeliveryTime *time.Time `json:"delivery_time,omitempty"`
+	TrackingNumber    string    `json:"tracking_number"`
+    EstimatedDeliveryTime *time.Time `json:"estimated_delivery_time"`
 }
