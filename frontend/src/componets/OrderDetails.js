@@ -136,16 +136,13 @@ const OrderDetails = () => {
                 </div>
             </div>
             <div className="order-actions">
-                {order.status === "Pending" && (
-                    <button className="verify-order-btn" onClick={handleVerifyOrder}>Verify Order</button>
-                )}
-                {order.status === "Verified"?
-                    ""
-                    : 
-                    <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
-                
-                }
-            </div>
+    {(order.status === "pending" || order.status === "declined") ? (
+        <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
+    ) : (
+        <span className="cancel-disabled-message">Order cannot be canceled because it is already accepted</span>
+    )}
+</div>
+
         </div>
     );
 };

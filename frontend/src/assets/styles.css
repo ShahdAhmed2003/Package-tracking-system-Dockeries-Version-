@@ -129,6 +129,18 @@ h3 {
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
+.logout-button {
+  background-color:#ff5722;   /* Sets background color to blue */
+  color: white;             /* Sets text color to white */
+  padding: 10px 20px;       /* Adds some padding */
+  border: none;             /* Removes the border */
+  border-radius: 5px;       /* Rounds the corners */
+  cursor: pointer;         /* Changes the cursor to a pointer */
+}
+
+.logout-button:hover {
+  background-color: darkblue; /* Changes color when hovered */
+}
 
 .cancel-order-btn:hover {
   background-color: #c0392b;

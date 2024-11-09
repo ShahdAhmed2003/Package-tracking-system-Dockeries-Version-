@@ -1,9 +1,14 @@
 // Header.js
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../assets/styles.css';
+import LogoutButton from './Log-out';
 
-function Header({ isLoggedIn }) {
+function Header({ isLoggedIn, onLogout }) {
+    const navigate = useNavigate();
+
+  
+
     return (
         <header className="header">
             <div className="logo">
@@ -15,6 +20,7 @@ function Header({ isLoggedIn }) {
                     <>
                         <Link to="/order">Create Order</Link>
                         <Link to="/my-orders">My Orders</Link>
+                        <LogoutButton onLogout={onLogout} />
                     </>
                 ) : (
                     <>

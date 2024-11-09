@@ -8,6 +8,11 @@ import RegistrationForm from './componets/RegisterationForm';
 import OrderForm from './componets/OrderForm';
 import MyOrders from './componets/MyOrders';
 import OrderDetails from './componets/OrderDetails';
+import AssignedOrders from'./componets/CourierAssignedOrders';
+import ManageOrders from './componets/CourierManageOrder';
+import AdminManageOrders from './componets/AdminManageOrders';
+import Layout from './componets/Layout';
+
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,17 +29,29 @@ function App() {
         setIsLoggedIn(!!(token && user));
     };
 
+const handleLogout = () => {
+        localStorage.clear();
+        setIsLoggedIn(false);
+    };
     return (
         <BrowserRouter>
-            <Header isLoggedIn={isLoggedIn} />
+           
             <Routes>
+            <Route path="/" element={<Layout isLoggedIn={isLoggedIn} onLogout={handleLogout} />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<LoginForm onLogin={handleLoginStatusChange} />} />
                 <Route path="/register" element={<RegistrationForm />} />
                 <Route path="/order" element={<OrderForm />} />
                 <Route path="/my-orders" element={<MyOrders />} />
                 <Route path="/order-details/:orderId" element={<OrderDetails />} />
+
+            </Route>
+              {/* Routes that don't need the Header */}
+            <Route path="/courier/manageOrders" element={<ManageOrders onLogout={handleLogout} />} />
+            <Route path="/courier/assignedOrders" element={<AssignedOrders onLogout={handleLogout} />} />
+            <Route path="/admin/manageOrders" element={<AdminManageOrders onLogout={handleLogout}/>} />
             </Routes>
+            
         </BrowserRouter>
     );
 }
