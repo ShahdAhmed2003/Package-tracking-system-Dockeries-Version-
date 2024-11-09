@@ -13,6 +13,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
+
+
 )
 
 func GenerateTrackingNumber() string {
@@ -54,7 +56,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 		estimatedDeliveryTime:=CalculateEstimatedTime()
 		order.EstimatedDeliveryTime=&estimatedDeliveryTime
 		if order.Status==""{
-			order.Status="Pending"
+			order.Status="pending"
 		}
 		if err := db.Create(&order).Error; err != nil {
             http.Error(res, "Failed to create order", http.StatusInternalServerError)
@@ -92,7 +94,7 @@ func VerifyOrder(db *gorm.DB) http.HandlerFunc {
             return
         }
 
-        order.Status = "Verified"
+        order.Status = "accepted"
         if err := db.Save(&order).Error; err != nil {
             http.Error(res, "Failed to update order status", http.StatusInternalServerError)
             return
@@ -172,7 +174,7 @@ func CancelOrder(db *gorm.DB) http.HandlerFunc {
             http.Error(w, "Order not found", http.StatusNotFound)
             return
         }
-        if order.Status != "Pending" {
+        if order.Status != "pending" {
             http.Error(w, "Order cannot be canceled, it is not pending", http.StatusConflict)
             return
         }
@@ -201,11 +203,11 @@ return func(w http.ResponseWriter, r *http.Request){
 		}
 		return
 	}
-	var orders []models.Order
-	if err := db.Where("assigned_courier_id = ?", courier.ID).Find(&orders).Error; err != nil {
-		http.Error(w, "Failed to retrieve assigned orders", http.StatusInternalServerError)
-		return
-	}
+	orders, err := fetchAssignedOrders(db, courier.ID)
+		if err != nil {
+			http.Error(w, "Failed to retrieve assigned orders", http.StatusInternalServerError)
+			return
+		}
 	if len(orders) == 0 {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -219,6 +221,17 @@ return func(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(orders)
 }
 }
+// fetchAssignedOrders is a helper function that retrieves orders assigned to a specific courier
+func fetchAssignedOrders(db *gorm.DB, courierID uint) ([]models.Order, error) {
+	var orders []models.Order
+	if err := db.Where("assigned_courier_id = ?", courierID).Find(&orders).Error; err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+
+       
 
 func UpdateOrderStatus(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -286,12 +299,7 @@ func UpdateOrderStatus(db *gorm.DB) http.HandlerFunc {
 func AssignOrderToCourierHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         // Extract the user claims from context to check the role
-        userClaims := r.Context().Value("user").(*models.Claims)
-        if userClaims.Role != "Admin" {
-            http.Error(w, "Unauthorized: Admins only", http.StatusForbidden)
-            return
-        }
-
+        
         // Parse the orderId and courierID from the request
         vars := mux.Vars(r)
         orderId, err := strconv.Atoi(vars["orderId"])
@@ -338,6 +346,7 @@ func AssignOrderToCourierHandler(db *gorm.DB) http.HandlerFunc {
 
         // Assign the order to the courier
         order.AssignedCourierID = uint(courierId)
+        order.Status = "pending"
         if err := db.Save(&order).Error; err != nil {
 			
 			log.Printf("failed to assign order")
@@ -461,3 +470,68 @@ func DeleteOrder (db *gorm.DB) http.HandlerFunc {
     json.NewEncoder(w).Encode(map[string]string{"message": "Order deleted successfully"})
 }
 }
+func DeclineOrder(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        orderID, err := strconv.Atoi(vars["orderId"])
+        if err != nil {
+            http.Error(w, "Invalid order ID", http.StatusBadRequest)
+            return
+        }
+
+		// Fetch authenticated user's details
+		userClaims := r.Context().Value("user").(*models.Claims)
+		var courier models.User
+		if err := db.Where("email = ?", userClaims.Email).First(&courier).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "Courier not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		// Check if the order is actually assigned to this courier
+		var order models.Order
+		if err := db.Where("id = ? AND assigned_courier_id = ?", orderID, courier.ID).First(&order).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "Order not found or not assigned to you", http.StatusNotFound)
+			} else {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		// Update the order to mark it as declined
+		order.Status = "Declined"
+		order.AssignedCourierID = 0 // Free up the order for reassignment
+		if err := db.Save(&order).Error; err != nil {
+			http.Error(w, "Failed to decline order", http.StatusInternalServerError)
+			return
+		}
+
+		// Respond with success message
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Order declined successfully"})
+	}
+}
+
+
+func GetAllCouriers(db *gorm.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        var couriers []models.User
+        // Find users with the "Courier" role
+        if err := db.Where("role = ?", "Courier").Find(&couriers).Error; err != nil {
+            http.Error(w, "Failed to retrieve couriers", http.StatusInternalServerError)
+            return
+        }
+
+        // Send the list of couriers as the response
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(couriers)
+    }
+}
+
+
