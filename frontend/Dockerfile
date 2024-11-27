@@ -1,3 +1,4 @@
+# Step 1: Use Node.js image to build the React app
 FROM node:16 AS build
 
 # Set the working directory
