@@ -125,10 +125,6 @@ const OrderDetails = () => {
                     <p>{order.estimated_delivery_time}</p>
                 </div>
                 
-                <div className="order-section">
-                    <h3>Delivery Time:</h3>
-                    <p>{order.delivery_time}</p>
-                </div>
                 
                 <div className="order-section">
                     <h3>Additional Instructions:</h3>

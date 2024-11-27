@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useNavigate } from 'react-router-dom';
+import { useParams,useNavigate, Link } from 'react-router-dom';
 import "../assets/styless.css";
 import { decodeToken } from "../utils/auth";
 import LogoutButton from './Log-out';
+import Header from './Header';
 const OrdersPage = ({onLogout}) => {
   
   const [orders, setOrders] = useState([]);
    const token=localStorage.getItem("token");
    const [error, setError] = useState(null);
    const [message, setMessage] = useState(""); 
-    // Add more orders as needed
-    let userID=null;
+
+   let userID=null;
     if(token){
       const decodedToken=decodeToken(token);
       userID=decodedToken.userID;
@@ -19,7 +20,6 @@ const OrdersPage = ({onLogout}) => {
   useEffect(() => {
 
     const fetchOrdersForCourier = async () => {
-      // Replace this with your actual data fetching logic
       try{
 
       const response = await fetch("http://localhost:8080/api/orders/assigned_orders",
@@ -35,7 +35,7 @@ const OrdersPage = ({onLogout}) => {
       console.log(fetchedOrders);
       if(fetchedOrders.message)
       {
-        setMessage(fetchedOrders.message);  // Set the "No assigned orders found" message
+        setMessage(fetchedOrders.message);
         setOrders([]);
       }
       else{
@@ -89,10 +89,16 @@ const OrdersPage = ({onLogout}) => {
     };
   return (
     <div>
-      <div><LogoutButton onLogout={onLogout} /> </div>
+      <header className="header">
+          <div className="logo">
+              <Link to={"/"} className="login-button">Bosta</Link>
+          </div>
+          <div><LogoutButton onLogout={onLogout} /> </div>
+
+      </header>
+      <br/>
       <h1>Orders for Courier:{userID} </h1>
       {message ? (
-        // If there's a message (no assigned orders), display it
         <p>{message}</p>
       ) : (
       <table>

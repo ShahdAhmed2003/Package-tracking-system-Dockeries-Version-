@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -10,31 +11,38 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
-const (
-	DB_USER     = "postgres"
-	DB_PASSWORD = "asdqwe123"
-	DB_NAME     = "bosta"
-)
-
 func ConnectDB() (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, err
-	}
+    // Read database connection details from environment variables
+    dbHost := os.Getenv("DB_HOST")
+    dbPort := os.Getenv("DB_PORT")
+    dbUser := os.Getenv("DB_USER")
+    dbPassword := os.Getenv("DB_PASSWORD")
+    dbName := os.Getenv("DB_NAME")
+
+    // Construct the Data Source Name (DSN)
+    dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
+        dbHost, dbPort, dbUser, dbPassword, dbName)
+
+    // Open a connection to the PostgreSQL database using sql package
+    db, err := sql.Open("postgres", dsn)
+    if err != nil {
+        return nil, err
+    }
     defer db.Close()
 
-    //now it creates the db if it doesnt exist:
-    _, err=db.Exec(fmt.Sprintf("create database %s", DB_NAME))
-    if err!=nil&& err.Error()!="pq: database \"bosta\" already exists"{
+    // Create the database if it doesn't exist
+    _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName))
+    if err != nil && err.Error() != fmt.Sprintf("pq: database \"%s\" already exists", dbName) {
         return nil, err
     }
 
-    //connect to the new db:
-	newDsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
-    gormDB, err:=gorm.Open(postgres.Open(newDsn), &gorm.Config{})
-    if err!=nil{
+    // Connect to the new database using GORM
+    newDsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
+        dbHost, dbPort, dbUser, dbPassword, dbName)
+    gormDB, err := gorm.Open(postgres.Open(newDsn), &gorm.Config{})
+    if err != nil {
         return nil, err
     }
-	return gormDB, nil
+
+    return gormDB, nil
 }

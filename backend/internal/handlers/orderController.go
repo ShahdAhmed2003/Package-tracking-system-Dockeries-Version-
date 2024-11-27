@@ -13,8 +13,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
-
-
 )
 
 func GenerateTrackingNumber() string {
@@ -27,43 +25,55 @@ func GenerateTrackingNumber() string {
     }
     return trackingNumber.String()
 }
-func CalculateEstimatedTime()time.Time{
-	rand.Seed((time.Now().UnixNano()))
-	randomHours:=rand.Intn(5-1+1)+1
-	bufferTime := 0.5 // 30 minutes in hours
-	totalEstimatedTime := float64(randomHours) + bufferTime
-	now := time.Now()
-	estimatedDeliveryTime := now.Add(time.Hour * time.Duration(totalEstimatedTime))
-	return estimatedDeliveryTime
+
+func CalculateEstimatedTime() time.Time {
+    rand.Seed(time.Now().UnixNano())
+    randomHours := rand.Intn(5-1+1) + 1
+    bufferTime := 0.5 // 30 minutes in hours
+    totalEstimatedTime := float64(randomHours) + bufferTime
+    now := time.Now()
+    estimatedDeliveryTime := now.Add(time.Hour * time.Duration(totalEstimatedTime))
+    return estimatedDeliveryTime
 }
-//POST /api/orders/addOrder
+
+// POST /api/orders/addOrder
 func CreateOrder(db *gorm.DB) http.HandlerFunc {
     return func(res http.ResponseWriter, req *http.Request) {
-        userID, err:=VerifyToken((req))
-		if err!=nil{
-			http.Error(res, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		var order models.Order
-        
+        userID, err := VerifyToken(req)
+        if err != nil {
+            http.Error(res, err.Error(), http.StatusUnauthorized)
+            return
+        }
+
+        var order models.Order
         if err := json.NewDecoder(req.Body).Decode(&order); err != nil {
             http.Error(res, "Invalid JSON format", http.StatusBadRequest)
             log.Printf("Error decoding JSON: %v", err)
             return
         }
-		order.UserId=userID
-		order.TrackingNumber=GenerateTrackingNumber()
-		estimatedDeliveryTime:=CalculateEstimatedTime()
-		order.EstimatedDeliveryTime=&estimatedDeliveryTime
-		if order.Status==""{
-			order.Status="pending"
-		}
-		if err := db.Create(&order).Error; err != nil {
+
+        order.UserId = userID
+        order.TrackingNumber = GenerateTrackingNumber()
+
+        // Check if delivery time is provided by the user
+        if order.DeliveryTime == nil {
+            estimatedDeliveryTime := CalculateEstimatedTime()
+            order.EstimatedDeliveryTime = &estimatedDeliveryTime
+        } else {
+            order.EstimatedDeliveryTime = order.DeliveryTime
+        }
+
+        if order.Status == "" {
+            order.Status = "pending"
+        }
+
+        if err := db.Create(&order).Error; err != nil {
             http.Error(res, "Failed to create order", http.StatusInternalServerError)
             return
         }
+
         log.Printf("Order created successfully: %+v", order)
-        
+
         res.Header().Set("Content-Type", "application/json")
         res.WriteHeader(http.StatusCreated)
         if err := json.NewEncoder(res).Encode(order); err != nil {
@@ -72,6 +82,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
         }
     }
 }
+
 
 //GET /api/orders/verify?orderId=123
 func VerifyOrder(db *gorm.DB) http.HandlerFunc {

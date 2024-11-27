@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../assets/styles.css";
 import { Link, useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; // Install this for decoding the token
+import {jwtDecode} from "jwt-decode";
 
 const LoginForm = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -34,8 +34,6 @@ const LoginForm = ({ onLogin }) => {
 
       if (response.ok) {
         const data = await response.json();
-
-        // Store the token and user info
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -43,28 +41,29 @@ const LoginForm = ({ onLogin }) => {
         setFormData({ email: "", password: "" });
 
         if (onLogin) {
-          onLogin(); // Notify App of login status change
+          onLogin();
         }
-
-        // Decode the token to get user role
         const decodedToken = jwtDecode(data.token);
         const userRole = decodedToken.role;
 
-        // Navigate based on the user's role
         if (userRole === "Admin") {
           navigate("/admin/manageOrders");
-        } else if (userRole === "Courier") {
+        }
+        else if (userRole === "Courier") {
           navigate("/courier/assignedOrders");
-        } else {
+        }
+        else {
           navigate("/order");
         }
-      } else {
+      }
+      else {
         const errorData = await response.text();
         alert("Incorrect Email or Password. Please verify and try again.");
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error("Error submitting the form:", error);
-      alert("Something went wrong. Please try again.");
+      alert("Something went wrong. Please try again");
     }
   };
 
@@ -85,12 +84,7 @@ const LoginForm = ({ onLogin }) => {
 
         <div>
           <label>Password:</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
+          <input type="password" name="password" value={formData.password} onChange={handleChange} required
           />
         </div>
         <button type="submit">Login</button>
