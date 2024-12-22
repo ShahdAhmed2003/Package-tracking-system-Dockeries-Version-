@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "react-scripts start",
-    "build": "react-scripts build"  // Added build script
+    "build": "react-scripts build"
   },
   "keywords": [],
   "author": "",
