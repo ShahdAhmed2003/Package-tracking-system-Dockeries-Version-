@@ -27,7 +27,7 @@ RUN mkdir -p /var/cache/nginx/proxy_temp /var/run /var/log/nginx && \
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Expose port 80 for the frontend
-EXPOSE 80
+EXPOSE 3000
 
 # Start the Nginx server to serve the frontend app
 CMD ["nginx", "-g", "daemon off;"]
