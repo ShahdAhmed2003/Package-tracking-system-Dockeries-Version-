@@ -4,13 +4,13 @@ FROM node:16 AS build
 WORKDIR /app
 
 # Copy package.json and package-lock.json for dependency installation
-COPY frontend/package*.json ./
+COPY frontend/package*.json ./ 
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the frontend code
-COPY frontend/ .
+COPY frontend/ . 
 
 # Build the React app for production
 RUN npm run build
@@ -19,8 +19,9 @@ RUN npm run build
 FROM nginx:alpine
 
 # Create necessary directories and set permissions
-RUN mkdir -p /var/cache/nginx/client_temp /var/run /var/log/nginx && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
+RUN mkdir -p /var/cache/nginx/proxy_temp /var/run /var/log/nginx && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx && \
+    chmod -R 777 /var/cache/nginx /var/run /var/log/nginx
 
 # Copy the build files from the previous stage into the Nginx directory
 COPY --from=build /app/build /usr/share/nginx/html
