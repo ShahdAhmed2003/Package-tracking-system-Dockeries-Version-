@@ -18,8 +18,9 @@ RUN npm run build
 # Step 2: Use Nginx to serve the built files
 FROM nginx:alpine
 
-# Change ownership of the Nginx cache directory
-RUN mkdir -p /var/cache/nginx && chown -R nginx:nginx /var/cache/nginx
+# Create necessary directories and set permissions
+RUN mkdir -p /var/cache/nginx/client_temp /var/run /var/log/nginx && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
 
 # Copy the build files from the previous stage into the Nginx directory
 COPY --from=build /app/build /usr/share/nginx/html
