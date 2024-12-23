@@ -1,33 +1,24 @@
-FROM node:16 AS build
+# Use the official Node.js image
+FROM node:18-alpine
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json for dependency installation
-COPY frontend/package*.json ./ 
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the frontend code
-COPY frontend/ . 
+# Copy the rest of the application code
+COPY . .
 
-# Build the React app for production
+# Build the application
 RUN npm run build
 
-# Step 2: Use Nginx to serve the built files
-FROM nginx:alpine
+# Serve the application using a lightweight web server
+RUN npm install -g serve
+CMD ["serve", "-s", "build", "-l", "3000"]
 
-# Create necessary directories and set permissions
-RUN mkdir -p /var/cache/nginx/proxy_temp /var/run /var/log/nginx && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx && \
-    chmod -R 777 /var/cache/nginx /var/run /var/log/nginx
-
-# Copy the build files from the previous stage into the Nginx directory
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Expose port 80 for the frontend
+# Expose the port
 EXPOSE 3000
-
-# Start the Nginx server to serve the frontend app
-CMD ["nginx", "-g", "daemon off;"]
