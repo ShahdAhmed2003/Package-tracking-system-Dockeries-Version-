@@ -20,7 +20,7 @@ const OrderDetails = () => {
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/orders/details/${orderId}?userId=${userID}`, {
+                const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/details/${orderId}?userId=${userID}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -44,7 +44,7 @@ const OrderDetails = () => {
 
     const handleCancelOrder = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/orders/cancel/${orderId}`, {
+            const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/cancel/${orderId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -66,7 +66,7 @@ const OrderDetails = () => {
 
     const handleVerifyOrder = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/orders/verify?orderId=${orderId}`, {
+            const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/verify?orderId=${orderId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -124,21 +124,18 @@ const OrderDetails = () => {
                     <h3>Estimated Delivery:</h3>
                     <p>{order.estimated_delivery_time}</p>
                 </div>
-                
-                
                 <div className="order-section">
                     <h3>Additional Instructions:</h3>
-                    <p>{order.package_details.special_requirements?order.package_details.special_requirements:"None"}</p>
+                    <p>{order.package_details.special_requirements ? order.package_details.special_requirements : "None"}</p>
                 </div>
             </div>
             <div className="order-actions">
-    {(order.status === "pending" || order.status === "declined") ? (
-        <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
-    ) : (
-        <span className="cancel-disabled-message">Order cannot be canceled because it is already accepted</span>
-    )}
-</div>
-
+                {(order.status === "pending" || order.status === "declined") ? (
+                    <button className="cancel-order-btn" onClick={handleCancelOrder}>Cancel Order</button>
+                ) : (
+                    <span className="cancel-disabled-message">Order cannot be canceled because it is already accepted</span>
+                )}
+            </div>
         </div>
     );
 };
