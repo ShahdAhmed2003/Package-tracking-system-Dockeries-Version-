@@ -8,31 +8,32 @@ const MyOrders = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const token = localStorage.getItem("token");
-    let userID=null;
-    if(token){
-        const decodedToken=decodeToken(token);
-        userID=decodedToken.userID;
+    let userID = null;
+    if (token) {
+        const decodedToken = decodeToken(token);
+        userID = decodedToken.userID;
     }
 
     useEffect(() => {
-        if(!userID){
-            setError("user is not authonticated!");
+        if (!userID) {
+            setError("User is not authenticated!");
             setLoading(false);
-            return
+            return;
         }
+
         const fetchOrders = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/users/orders?userId=${userID}`, {
-                    method:'GET',
-                    headers:{
-                        'Authorization':`Bearer ${token}`
-                    }
+                const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/users/orders?userId=${userID}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
                 });
                 if (!response.ok) {
                     throw new Error('Failed to fetch orders');
                 }
                 const data = await response.json();
-                console.log(data)
+                console.log(data);
                 setOrders(data);
             } catch (err) {
                 setError(err.message);
