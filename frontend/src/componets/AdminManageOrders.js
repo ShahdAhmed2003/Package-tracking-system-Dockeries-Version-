@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import "../assets/styless.css";
 import LogoutButton from './Log-out';
-const AdminOrdersPage = ({onLogout}) => {
+
+const AdminOrdersPage = ({ onLogout }) => {
   const [orders, setOrders] = useState([]);
   const [couriers, setCouriers] = useState([]);
   const [error, setError] = useState(null);
@@ -11,7 +12,7 @@ const AdminOrdersPage = ({onLogout}) => {
     // Fetch orders
     const fetchOrders = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/orders/admin", {
+        const response = await fetch("http://backend-route-your-project.apps.openshift.com/api/orders/admin", {
           method: 'GET'
         });
 
@@ -29,7 +30,7 @@ const AdminOrdersPage = ({onLogout}) => {
     // Fetch couriers
     const fetchCouriers = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/couriers", {
+        const response = await fetch("http://backend-route-your-project.apps.openshift.com/api/couriers", {
           method: 'GET'
         });
 
@@ -48,10 +49,11 @@ const AdminOrdersPage = ({onLogout}) => {
     fetchCouriers();
   
   }, []); 
+
   // Assign courier to an order
   const assignCourier = async (orderId, courierId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/assign/${orderId}/${courierId}`, {
+      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/assign/${orderId}/${courierId}`, {
         method: 'POST', // Assuming the method is POST for assigning courier
       });
 
@@ -59,8 +61,8 @@ const AdminOrdersPage = ({onLogout}) => {
         throw new Error("Failed to assign courier.");
       }
 
-       // Refresh the page after the assignment
-    window.location.reload(); // This will reload the page
+      // Refresh the page after the assignment
+      window.location.reload(); // This will reload the page
     } catch (err) {
       setError(err.message);
     }
@@ -69,7 +71,7 @@ const AdminOrdersPage = ({onLogout}) => {
   // Update the status of an order
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/admin-update/${orderId}`, {
+      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/admin-update/${orderId}`, {
         method: 'PUT', 
         body: JSON.stringify({ status: newStatus }),
         headers: { 'Content-Type': 'application/json' },
@@ -88,7 +90,7 @@ const AdminOrdersPage = ({onLogout}) => {
   // Delete an order
   const deleteOrder = async (orderId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/admin-delete/${orderId}`, {
+      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/admin-delete/${orderId}`, {
         method: 'DELETE',
       });
 
@@ -96,7 +98,6 @@ const AdminOrdersPage = ({onLogout}) => {
         throw new Error("Failed to delete the order.");
       }
 
-     
       window.location.reload();
     } catch (err) {
       setError(err.message);
@@ -107,7 +108,6 @@ const AdminOrdersPage = ({onLogout}) => {
   const statusOptions = ["pending", "accepted", "picked up", "in transit", "delivered"];
 
   return (
-   
     <div>
       <h1>Admin Orders Management</h1>
       <div><LogoutButton onLogout={onLogout} /> </div>
@@ -145,7 +145,7 @@ const AdminOrdersPage = ({onLogout}) => {
               </td>
               <td>
                 <select
-                  value={order.courier_id|| ""}
+                  value={order.courier_id || ""}
                   onChange={(e) => assignCourier(order.ID, parseInt(e.target.value))}
                 >
                   <option value="">Unassigned</option>
