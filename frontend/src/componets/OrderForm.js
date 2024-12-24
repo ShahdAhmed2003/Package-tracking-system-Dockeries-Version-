@@ -98,7 +98,7 @@ const OrderForm = () => {
         console.log("Submitting order:", transformedData);
         const userToken = localStorage.getItem("token");
         try {
-            const response = await fetch('http://localhost:8080/api/orders/addOrder', {
+            const response = await fetch('https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/addOrder', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
