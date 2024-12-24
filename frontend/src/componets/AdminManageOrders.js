@@ -12,7 +12,7 @@ const AdminOrdersPage = ({ onLogout }) => {
     // Fetch orders
     const fetchOrders = async () => {
       try {
-        const response = await fetch("http://backend-route-your-project.apps.openshift.com/api/orders/admin", {
+        const response = await fetch("https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/admin", {
           method: 'GET'
         });
 
@@ -30,7 +30,7 @@ const AdminOrdersPage = ({ onLogout }) => {
     // Fetch couriers
     const fetchCouriers = async () => {
       try {
-        const response = await fetch("http://backend-route-your-project.apps.openshift.com/api/couriers", {
+        const response = await fetch("https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/couriers", {
           method: 'GET'
         });
 
@@ -53,7 +53,7 @@ const AdminOrdersPage = ({ onLogout }) => {
   // Assign courier to an order
   const assignCourier = async (orderId, courierId) => {
     try {
-      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/assign/${orderId}/${courierId}`, {
+      const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/assign/${orderId}/${courierId}`, {
         method: 'POST', // Assuming the method is POST for assigning courier
       });
 
@@ -71,7 +71,7 @@ const AdminOrdersPage = ({ onLogout }) => {
   // Update the status of an order
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/admin-update/${orderId}`, {
+      const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/admin-update/${orderId}`, {
         method: 'PUT', 
         body: JSON.stringify({ status: newStatus }),
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,7 @@ const AdminOrdersPage = ({ onLogout }) => {
   // Delete an order
   const deleteOrder = async (orderId) => {
     try {
-      const response = await fetch(`http://backend-route-your-project.apps.openshift.com/api/orders/admin-delete/${orderId}`, {
+      const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/admin-delete/${orderId}`, {
         method: 'DELETE',
       });
 
