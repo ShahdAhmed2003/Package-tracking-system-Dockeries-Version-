@@ -1,90 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import LogoutButton from './Log-out';
 import { decodeToken } from "../utils/auth";
 import Header from './Header';
-const OrdersPage = ({onLogout}) => {
+
+const OrdersPage = ({ onLogout }) => {
   const [orders, setOrders] = useState([]);
-   const token=localStorage.getItem("token");
-   const [error, setError] = useState(null);
-   const [message, setMessage] = useState(""); 
-    let userID=null;
-    if(token){
-      const decodedToken=decodeToken(token);
-      userID=decodedToken.userID;
+  const token = localStorage.getItem("token");
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState("");
+
+  let userID = null;
+  if (token) {
+    const decodedToken = decodeToken(token);
+    userID = decodedToken.userID;
   }
-  const navigate = useNavigate(); 
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrdersForCourier = async () => {
-      try{
-
-      const response = await fetch("http://localhost:8080/api/orders/assigned_orders",
-      {method:'GET',
-      headers:{
-        'Authorization':`Bearer ${token}`
-      }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      const fetchedOrders = await response.json();
-      console.log(fetchedOrders);
-      if(fetchedOrders.message)
-      {
-        setMessage(fetchedOrders.message);  
-        setOrders([]);
-      }
-      else{
-      setOrders(fetchedOrders);
-      setMessage(""); 
-      }
-      
-    }
-    catch(err)
-    {
-      setError(err.message);
-    };
-
-  };
-  fetchOrdersForCourier();
-},[token]);
-  
-
-  /*const updateOrderStatus = (id, newStatus) => {
-    setOrders(orders.map(order => 
-      order.id === id ? { ...order, status: newStatus } : order
-    ));
-  };*/
-  const updateOrderStatus = async (orderId,newStatus) => {
-        
-    const response = await fetch(`http://localhost:8080/api/orders/update-order-status/${orderId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
-        headers: {
+      try {
+        const response = await fetch("https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/assigned_orders", {
+          method: 'GET',
+          headers: {
             'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
         }
+
+        const fetchedOrders = await response.json();
+        console.log(fetchedOrders);
+        if (fetchedOrders.message) {
+          setMessage(fetchedOrders.message);
+          setOrders([]);
+        } else {
+          setOrders(fetchedOrders);
+          setMessage("");
+        }
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    fetchOrdersForCourier();
+  }, [token]);
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    const response = await fetch(`https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/api/orders/update-order-status/${orderId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus }),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
 
     if (response.ok) {
-        alert("Order Updated successfully");
-        
+      alert("Order Updated successfully");
     } else {
-        const errorData = await response.text();
-        alert("Failed update order: " + errorData);
+      const errorData = await response.text();
+      alert("Failed update order: " + errorData);
     }
     window.location.reload();
-};
+  };
+
   return (
     <div>
       <header className="header">
-          <div className="logo">
-              <Link to={"/"} className="login-button">Bosta</Link>
-          </div>
-          <div><LogoutButton onLogout={onLogout} /> </div>
-
+        <div className="logo">
+          <Link to={"/"} className="login-button">Bosta</Link>
+        </div>
+        <div><LogoutButton onLogout={onLogout} /> </div>
       </header>
-      <h1>Orders for Courier:{userID}</h1>
+      <h1>Orders for Courier: {userID}</h1>
       <table>
         <thead>
           <tr>
