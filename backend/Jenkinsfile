@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    environment {
+        BACKEND_IMAGE = 'mennaa/go-backend:latest'
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build Backend') {
+            steps {
+                script {
+                    sh 'docker build -t $BACKEND_IMAGE ./backend'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                script {
+                    sh 'docker run --rm $BACKEND_IMAGE go test ./...'
+                }
+            }
+        }
+        stage('Deploy Backend') {
+            steps {
+                script {
+                    sh 'docker run -d --name backend --link db -e DB_HOST=db $BACKEND_IMAGE'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Cleaning up...'
+            sh 'docker rm -f $(docker ps -aq)'
+        }
+    }
+}

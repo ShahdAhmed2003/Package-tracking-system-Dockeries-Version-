@@ -29,7 +29,7 @@ const RegistrationForm = () => {
         };
 
         try {
-            const response = await fetch('https://backend-shahdahmed851-dev.apps.rm2.thpm.p1.openshiftapps.com/signup', {
+            const response = await fetch('http://localhost:8080/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
