@@ -124,8 +124,7 @@ const OrderForm = () => {
     };
 
     return (
-        <div className="order-form-container">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="order-form">
                 <h1>Create Order</h1>
                 <section>
                     <h3>Pick-up Location</h3>
@@ -151,10 +150,14 @@ const OrderForm = () => {
                     <input type="number" name="packageDetails.width" placeholder="Width" onChange={handleChange} required />
                     <input type="number" name="packageDetails.height" placeholder="Height" onChange={handleChange} required />
                     <input type="text" name="packageDetails.contents" placeholder="Contents" onChange={handleChange} required />
-                    <label>
+
+                    <div>
                         <input type="checkbox" name="packageDetails.isFragile" onChange={handleChange} />
+                    <label>
                         Is fragile
                     </label>
+                        </div>                    
+                    
                     <textarea name="packageDetails.specialRequirements" placeholder="Special Requirements" onChange={handleChange}></textarea>
                 </section>
 
@@ -165,7 +168,6 @@ const OrderForm = () => {
 
                 <button type="submit">Create Order</button>
             </form>
-        </div>
     );
 };
 
